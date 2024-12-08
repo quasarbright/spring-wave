@@ -84,7 +84,7 @@ function clamp(x, min, max) {
   }
 }
 
-// doesn't move
+// doesn't move. rendered like a wall
 class StaticBall extends Ball {
   constructor(position) {
     super(position)
@@ -109,6 +109,15 @@ class ControlledBall extends Ball {
   }
 }
 
+class ScreenBall extends Ball {
+  constructor(position) {
+    super(position)
+    const d = equilibriumDistance
+    this.geometry = new THREE.BoxGeometry(d, 100, d)
+    this.mesh.geometry = this.geometry
+  }
+}
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -125,7 +134,11 @@ scene.add(light);
 
 const grid = Array(gridHeight).fill(null).map((_, r) => Array(gridWidth).fill(null).map((_, c) => {
   const position = new THREE.Vector3(c * equilibriumDistance, 0, r * equilibriumDistance)
-  return new Ball(position)
+  if (r === 0 || r === gridHeight - 1 || c === gridWidth - 1) {
+    return new ScreenBall(position)
+  } else {
+    return new Ball(position)
+  }
 }))
 
 const wallCol = Math.floor(gridWidth / 2)
@@ -145,7 +158,7 @@ grid[Math.floor(gridHeight / 2)][0] = new ControlledBall(grid[Math.floor(gridHei
 
 const controls = new OrbitControls(camera, renderer.domElement);
 const midPoint = new THREE.Vector3(gridWidth * equilibriumDistance / 2, 0, gridHeight * equilibriumDistance / 2)
-camera.position.set(-gridWidth,gridWidth,midPoint.z)
+camera.position.set(-gridWidth* 2,gridWidth * 2,midPoint.z)
 camera.lookAt(midPoint)
 controls.update()
 controls.target = midPoint

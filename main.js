@@ -65,7 +65,23 @@ class Ball {
 }
 
 function yToColor(y) {
-  return new THREE.Color(`hsl(${Math.abs(y * 100 % 256)}, 100%, 50%)`)
+  // return new THREE.Color(0xFF0000).lerp(new THREE.Color(0x0000FF), clamp(mapInterval(y, -1, 1, 0, 1), 0, 1))
+  return new THREE.Color(0x000000).lerp(new THREE.Color(0xFFFFFF), Math.abs(y/2))
+}
+
+function mapInterval(x, oldMin, oldMax, newMin, newMax) {
+  const oldProgress = (x - oldMin) / (oldMax - oldMin)
+  return newMin + oldProgress * (newMax - newMin)
+}
+
+function clamp(x, min, max) {
+  if (x < min) {
+    return min
+  } else if (x > max) {
+    return max
+  } else {
+    return x
+  }
 }
 
 // doesn't move
@@ -74,6 +90,8 @@ class StaticBall extends Ball {
     super(position)
     this.material = new THREE.MeshBasicMaterial({color: 0x888888})
     this.mesh.material = this.material
+    this.geometry = new THREE.BoxGeometry(2,20,10)
+    this.mesh.geometry = this.geometry
   }
 
   update(neighbors) {}

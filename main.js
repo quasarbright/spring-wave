@@ -7,9 +7,10 @@ const equilibriumDistance = 5
 // spring constant
 const k = 0.1
 // friction constant
-const kf = 0.01
+const kf = 0.1
 // gravity constant
-const g = 0.01
+const g = 0.000
+const slitSize = 15
 
 class Ball {
   constructor(position) {
@@ -25,13 +26,13 @@ class Ball {
     this.mass = 1
   }
 
-  // Ball[] -> void
+  // Vector3[] -> void
   // physics-based update
-  update(neighbors) {
+  update(neighborPositions) {
     const netForce = new THREE.Vector3(0,0,0)
     // spring forces
-    for (const neighbor of neighbors) {
-      const dy = this.position.y - neighbor.position.y
+    for (const neighborPosition of neighborPositions) {
+      const dy = this.position.y - neighborPosition.y
       // hooke's law
       const springForce = new THREE.Vector3(0,-k*dy)
       netForce.add(springForce)
@@ -48,18 +49,23 @@ class Ball {
     this.velocity.add(acceleration)
     // only allow vertical movement
     this.velocity.projectOnVector(new THREE.Vector3(0,1,0))
-    this.velocity.clampLength(-1/5,1/5)
+    // this.velocity.clampLength(-1/5,1/5)
     // this should mutate the mesh position as well since they are aliases
     this.position.add(this.velocity)
     // if (this.position.y < 0) {
     //   this.position.y = 0
     //   this.velocity.y = 0
     // }
+    this.material.color = yToColor(this.position.y)
   }
 
   remove() {
     scene.remove(this.mesh)
   }
+}
+
+function yToColor(y) {
+  return new THREE.Color(`hsl(${Math.abs(y * 100 % 256)}, 100%, 50%)`)
 }
 
 // doesn't move
@@ -81,7 +87,7 @@ class ControlledBall extends Ball {
   }
 
   update(neighbors) {
-    this.position.y = 10 * Math.sin(Date.now() / 200)
+    this.position.y = 50 * Math.sin(Date.now() / 200)
   }
 }
 
@@ -109,10 +115,9 @@ for (let r = 0; r < gridHeight; r++) {
   grid[r][wallCol].remove()
   grid[r][wallCol] = new StaticBall(grid[r][wallCol].position)
 }
-for (const dr of [-1,0,1]) {
-  const holeRow = Math.floor(gridHeight / 2) + dr
-  grid[holeRow][wallCol].remove()
-  grid[holeRow][wallCol] = new Ball(grid[holeRow][wallCol].position)
+for (let r = Math.floor(gridHeight / 2 - slitSize / 2); r < Math.floor(gridHeight / 2 + slitSize / 2); r++) {
+  grid[r][wallCol].remove()
+  grid[r][wallCol] = new Ball(grid[r][wallCol].position)
 }
 
 // const v = 20
@@ -129,6 +134,7 @@ controls.target = midPoint
 
 function animate() {
     renderer.render(scene, camera);
+    const neighborPositions = grid.map(row => row.map(ball => ball.position.clone()))
     for (let r = 0; r < gridHeight; r++) {
       for (let c = 0; c < gridHeight; c++) {
         const ball = grid[r][c]
@@ -142,7 +148,7 @@ function animate() {
           if (nr < gridHeight && nr >= 0 && nc < gridWidth && nc >= 0) {
             const neighbor = grid[nr][nc]
             if (!(neighbor instanceof StaticBall)) {
-              neighbors.push(neighbor)
+              neighbors.push(neighborPositions[nr][nc])
             }
           }
         }

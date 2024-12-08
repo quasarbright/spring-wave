@@ -12,6 +12,11 @@ const kf = 0.1
 const g = 0.000
 const slitSize = 15
 
+const SINGLE_SLIT = 'SINGLE_SLIT'
+const DOUBLE_SLIT = 'DOUBLE_SLIT'
+// const mode = SINGLE_SLIT
+const mode = DOUBLE_SLIT
+
 class Ball {
   constructor(position) {
     this.position = position
@@ -132,6 +137,7 @@ const light = new THREE.DirectionalLight(color, intensity);
 light.position.set(-1, 2, 4);
 scene.add(light);
 
+// regular balls and screen
 const grid = Array(gridHeight).fill(null).map((_, r) => Array(gridWidth).fill(null).map((_, c) => {
   const position = new THREE.Vector3(c * equilibriumDistance, 0, r * equilibriumDistance)
   if (r === 0 || r === gridHeight - 1 || c === gridWidth - 1) {
@@ -141,20 +147,25 @@ const grid = Array(gridHeight).fill(null).map((_, r) => Array(gridWidth).fill(nu
   }
 }))
 
+// wall
 const wallCol = Math.floor(gridWidth / 2)
 for (let r = 0; r < gridHeight; r++) {
   grid[r][wallCol].remove()
   grid[r][wallCol] = new StaticBall(grid[r][wallCol].position)
 }
-for (let r = Math.floor(gridHeight / 2 - slitSize / 2); r < Math.floor(gridHeight / 2 + slitSize / 2); r++) {
-  grid[r][wallCol].remove()
-  grid[r][wallCol] = new Ball(grid[r][wallCol].position)
+
+// slit(s)
+const slits = mode === SINGLE_SLIT ? [Math.floor(gridHeight/2)] : [Math.floor(gridHeight / 3), Math.floor(gridHeight*2/3)]
+for (const slit of slits) {
+  for (let r = Math.floor(slit - slitSize / 2); r < Math.floor(slit + slitSize / 2); r++) {
+    grid[r][wallCol].remove()
+    grid[r][wallCol] = new Ball(grid[r][wallCol].position)
+  }
 }
 
-// const v = 20
+// controlled ball
 grid[Math.floor(gridHeight / 2)][0].remove()
 grid[Math.floor(gridHeight / 2)][0] = new ControlledBall(grid[Math.floor(gridHeight / 2)][0].position)
-// grid[gridHeight-1][0].velocity.y = -v
 
 const controls = new OrbitControls(camera, renderer.domElement);
 const midPoint = new THREE.Vector3(gridWidth * equilibriumDistance / 2, 0, gridHeight * equilibriumDistance / 2)

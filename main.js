@@ -9,8 +9,8 @@ const k = 0.1
 // friction constant
 const kf = 0.1
 // gravity constant
-const g = 0.000
-const slitSize = 15
+const g = 0
+const slitSize = 2
 
 const SINGLE_SLIT = 'SINGLE_SLIT'
 const DOUBLE_SLIT = 'DOUBLE_SLIT'
@@ -140,7 +140,8 @@ scene.add(light);
 // regular balls and screen
 const grid = Array(gridHeight).fill(null).map((_, r) => Array(gridWidth).fill(null).map((_, c) => {
   const position = new THREE.Vector3(c * equilibriumDistance, 0, r * equilibriumDistance)
-  if (r === 0 || r === gridHeight - 1 || c === gridWidth - 1) {
+  // if (r === 0 || r === gridHeight - 1 || c === gridWidth - 1) {
+  if (c === gridWidth - 1) {
     return new ScreenBall(position)
   } else {
     return new Ball(position)
@@ -164,12 +165,14 @@ for (const slit of slits) {
 }
 
 // controlled ball
-grid[Math.floor(gridHeight / 2)][0].remove()
-grid[Math.floor(gridHeight / 2)][0] = new ControlledBall(grid[Math.floor(gridHeight / 2)][0].position)
+for (let r = 0; r < gridHeight; r++) {
+  grid[r][0].remove()
+  grid[r][0] = new ControlledBall(grid[r][0].position)
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 const midPoint = new THREE.Vector3(gridWidth * equilibriumDistance / 2, 0, gridHeight * equilibriumDistance / 2)
-camera.position.set(-gridWidth* 2,gridWidth * 2,midPoint.z)
+camera.position.set(-gridWidth* 1.5,gridWidth * 4,midPoint.z)
 camera.lookAt(midPoint)
 controls.update()
 controls.target = midPoint
